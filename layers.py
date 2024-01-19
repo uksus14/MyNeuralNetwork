@@ -27,12 +27,14 @@ class Layer:
         if self.answers is None:
             self.answers = self.request()
     def update(self, mul: np.ndarray):
-        self.ans()
         djdz = np.multiply(mul, np.multiply(self.answers[1], np.multiply(self.answers[0], self.answers[0])-self.answers[0]))
 
         self.bs += shift(self.bs, djdz)
         self.ks += shift(self.ks, np.matmul(self.prev.answers[0].T, djdz))
         self.prev.update(np.matmul(djdz, self.ks.T))
+    def clear(self):
+        self.answers = None
+        self.prev.clear()
 class ILayer(Layer):
     def __init__(self, width: int):
         self.width = width
@@ -40,13 +42,35 @@ class ILayer(Layer):
     def request(self) -> tuple[ndarray, ndarray]:
         return self.answers
     def update(self, mul: np.ndarray):pass
+    def clear(self):pass
     def set_input(self, input: np.ndarray):
         self.answers = input.reshape(())
 class OLayer(Layer):
-    def update(self, answers):
-        #cost here
-        return super().update(-answers)
+    def update(self, answers: np.ndarray):
+        self.ans()
+        real_answers = answers.reshape(())
+        mul = (self.answers[0]-real_answers)/(self.answers[0]*(1-self.answers[0]))
+        return super().update(mul)
 
 class NN:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, input: int, output: int, hidden: list[int]=[]):
+        self.i = ILayer(input)
+        self.layers = [self.i]
+        for width in hidden:
+            self.layers.append(Layer(width, self.layers[-1]))
+        self.o = OLayer(output, self.layers[-1])
+        self.layers.append(self.o)
+    def clear(self):
+        self.o.clear()
+    def set_input(self, input: np.ndarray):
+        self.i.set_input(input)
+        self.clear()
+    def update(self, answers: int|np.ndarray):
+        if isinstance(answers, int):
+            answers = self.get_answers(answers)
+        self.o.update(answers)
+        self.clear()
+    def get_answers(self, index: int) -> np.ndarray:
+        answers = np.zeros(())
+        answers[0, index] = 1
+        return answers
