@@ -1,13 +1,10 @@
 import numpy as np
 from typing_extensions import Self
-import cmath
+import math
 
 from numpy import ndarray
 
 alpha = .001
-def sigmoid_(x: float) -> float:
-    return 1/(1+cmath.exp(-x))
-sigmoid = np.vectorize(sigmoid_)
 shift = lambda:None
 def set_shift(alpha):
     global shift
@@ -17,23 +14,27 @@ def set_shift(alpha):
 set_shift(alpha)
 
 class Layer:
+    all_layers = []
     def __init__(self, width: int, prev: Self):
         self.width = width
         self.prev = prev
-        self.ks: np.ndarray = 2*np.random.rand(self.prev.width, self.width)-1
-        self.bs: np.ndarray = 2*np.random.rand(1, self.width)-1
+        self.ks: np.ndarray = np.random.rand(self.prev.width, self.width)-.5
+        self.bs: np.ndarray = np.random.rand(1, self.width)-.5
         self.answers = None
+
+        self.i = len(self.all_layers)
+        self.all_layers.append(self)
     def request(self) -> tuple[np.ndarray, np.ndarray]:
         self.prev.ans()
         z = np.matmul(self.prev.answers[0], self.ks)+self.bs
-        return sigmoid(z), z
+        exp = np.exp(-z)
+        return 1/(1+exp), exp
     def ans(self):
         if self.answers is None:
             self.answers = self.request()
     def update(self, mul: np.ndarray):
-        djdz = np.multiply(mul, np.multiply(self.answers[1], np.multiply(self.answers[0], self.answers[0])-self.answers[0]))
+        djdz = np.multiply(mul, np.multiply(self.answers[1], np.multiply(self.answers[0], self.answers[0])))
         #djdz is complex????
-        print(self.bs, djdz)
         self.bs += shift(self.bs, djdz)
         self.ks += shift(self.ks, np.matmul(self.prev.answers[0].T, djdz))
         self.prev.update(np.matmul(djdz, self.ks.T))
@@ -43,9 +44,7 @@ class Layer:
 class ILayer(Layer):
     def __init__(self, width: int):
         self.width = width
-        self.answers = np.zeros((1, self.width))
-    def request(self) -> tuple[ndarray, ndarray]:
-        return self.answers
+        self.answers = [np.zeros((1, self.width)), None]
     def update(self, mul: np.ndarray):pass
     def clear(self):pass
     def set_input(self, input: np.ndarray):
@@ -54,7 +53,7 @@ class OLayer(Layer):
     def update(self, answers: np.ndarray):
         self.ans()
         real_answers = answers.reshape((1, self.width))
-        mul = (self.answers[0]-real_answers)/np.multiply(self.answers[0], 1-self.answers[0])
+        mul = (1-real_answers)/(1-self.answers[0])-real_answers/self.answers[0]
         return super().update(mul)
 
 class NN:
