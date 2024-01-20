@@ -41,11 +41,11 @@ class Layer:
 class ILayer(Layer):
     def __init__(self, width: int):
         self.width = width
-        self.answers = [np.zeros((1, self.width)), None]
+        self.answers = [np.zeros((1, self.width)), np.zeros((1, self.width))]
     def update(self, mul: np.ndarray):pass
     def clear(self):pass
     def set_input(self, input: np.ndarray):
-        self.answers = input.reshape((1, self.width))
+        self.answers[0] = input.reshape((1, self.width))
 class OLayer(Layer):
     def update(self, answers: np.ndarray):
         self.ans()
@@ -61,16 +61,23 @@ class NN:
             self.layers.append(Layer(width, self.layers[-1]))
         self.o = OLayer(output, self.layers[-1])
         self.layers.append(self.o)
-    def clear(self):
+    def clear_answers(self):
         self.o.clear()
+    def clear_input(self):
+        self.set_input(np.zeros((1, self.i.width)))
     def set_input(self, input: np.ndarray):
         self.i.set_input(input.reshape((1, self.i.width)))
-        self.clear()
+        self.clear_answers()
+    def change_input(self, index: int, value: int):
+        if self.inputs[0, index] == value:
+            return
+        self.inputs[0, index] = value
+        self.clear_answers()
     def update(self, answers: int|np.ndarray):
         if isinstance(answers, int):
             answers = self._get_answers(answers)
         self.o.update(answers)
-        self.clear()
+        self.clear_answers()
     def _get_answers(self, index: int) -> np.ndarray:
         answers = np.zeros((1, self.o.width))
         answers[0, index] = 1
@@ -78,3 +85,6 @@ class NN:
     def answers(self) -> np.ndarray:
         self.o.ans()
         return self.o.answers[0]
+    @property
+    def inputs(self) -> np.ndarray:
+        return self.i.answers[0]
