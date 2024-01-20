@@ -1,4 +1,4 @@
-from NNnumber_train import get_nn, train
+from NNnumber_train import get_nn, train, save_nn, load_nn
 
 nn = get_nn(20, 20)
 train_for = 128
@@ -105,6 +105,12 @@ while running:
                 continue
             elif event.key == pg.K_t:
                 train(nn, train_for)
+                continue
+            elif event.key == pg.K_s:
+                save_nn(nn)
+                continue
+            elif event.key == pg.K_l:
+                nn = load_nn()
                 continue
             try:
                 pressed_key = PG_NUMBERS.index(event.key)
