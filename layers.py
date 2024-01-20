@@ -1,10 +1,7 @@
 import numpy as np
 from typing_extensions import Self
-import math
 
-from numpy import ndarray
-
-alpha = .001
+alpha = .1
 shift = lambda:None
 def set_shift(alpha):
     global shift
@@ -34,10 +31,10 @@ class Layer:
             self.answers = self.request()
     def update(self, mul: np.ndarray):
         djdz = np.multiply(mul, np.multiply(self.answers[1], np.multiply(self.answers[0], self.answers[0])))
-        #djdz is complex????
-        self.bs += shift(self.bs, djdz)
-        self.ks += shift(self.ks, np.matmul(self.prev.answers[0].T, djdz))
+        djdks = np.matmul(self.prev.answers[0].T, djdz)
         self.prev.update(np.matmul(djdz, self.ks.T))
+        self.bs = shift(self.bs, djdz)
+        self.ks = shift(self.ks, djdks)
     def clear(self):
         self.answers = None
         self.prev.clear()
@@ -71,10 +68,10 @@ class NN:
         self.clear()
     def update(self, answers: int|np.ndarray):
         if isinstance(answers, int):
-            answers = self.get_answers(answers)
+            answers = self._get_answers(answers)
         self.o.update(answers)
         self.clear()
-    def get_answers(self, index: int) -> np.ndarray:
+    def _get_answers(self, index: int) -> np.ndarray:
         answers = np.zeros((1, self.o.width))
         answers[0, index] = 1
         return answers

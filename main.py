@@ -1,17 +1,45 @@
-from layers import NN, set_shift
-import numpy as np
-from nums import numbers, binary
+from NNnumber_train import get_nn
 
-nn = NN(4, 2)
+nn = get_nn(20, 20)
 
-for _ in range(0):
-    for i in range(10):
-        nn.set_input(np.matrix(binary[i]))
-        nn.update(i)
+import pygame as pg
+pg.init()
 
-for i in range(2):
-    nn.set_input(np.matrix(binary[i]))
-    print(i)
-    print(nn.answers())
-    nn.update(i)
-    print(nn.answers())
+SIDEBAR_WIDTH, WINDOW_HEIGHT = 300, 750
+GAP = 4
+CIRCLE_RADIUS = 25
+GRID_HEIGHT = 5
+GRID_WIDTH = 3
+
+BACKGROUND = (150, 150, 150)
+EMPTY_CELL = (255, 255, 255)
+FILLED_CELL = (0, 0, 0)
+CIRCLE = (0, 0, 0)
+
+CELL_SIZE = WINDOW_HEIGHT//GRID_HEIGHT-GAP
+WINDOW_WIDTH = (CELL_SIZE+GAP)*GRID_WIDTH+SIDEBAR_WIDTH
+
+screen = pg.display.set_mode([WINDOW_WIDTH, WINDOW_HEIGHT])
+
+def draw_grid():
+    nn.
+    for i in range(GRID_HEIGHT):
+        for j in range(GRID_WIDTH):
+            pg.draw.rect(screen, )
+
+def update():
+    screen.fill(BACKGROUND)
+    draw_grid()
+    grid = nn.answers()
+    pg.draw.circle(screen, (0, 0, 255), (250, 250), 75)
+    pg.display.flip()
+
+running = True
+while running:
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            running = False
+
+    update()
+
+pg.quit()
