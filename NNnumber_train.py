@@ -1,6 +1,6 @@
 from layers import NN, set_shift
 import numpy as np
-from nums import numbers, binary
+from nums import get_train, get_test
 from time import time
 import pickle
 
@@ -10,30 +10,28 @@ def get_nn(*hidden: int, shift: float = None) -> NN:
     nn = NN(15, 11, hidden)
     return nn
 
-def hash_number(number: np.ndarray):
-    answer = 0
-    for i in range(number.shape[0]):
-        for j in range(number.shape[1]):
-            answer = (answer+number[i, j])*2
-    return answer
-
-hash_numbers = [hash_number(np.matrix(number)) for number in numbers]
-
-def train(nn: NN, train_for: int = 100):
+def train(nn: NN, samples: int = 1024):
     prev_state = nn.inputs.copy()
     start = time()
-    print(f"training {train_for} times")
-    for _ in range(train_for):
-        for i in range(10):
-            nn.set_input(np.matrix(numbers[i]))
-            nn.update(i)
-        nothing = np.random.randint(2, size=(3, 5))
-        while hash_number(nothing) in hash_numbers:
-            nothing = np.random.randint(2, size=(3, 5))
-        nn.set_input(nothing)
+    print(f"training {samples} samples out of 60'000")
+    X, y = get_train()
+    print(X, y)
+    for _ in range(samples):
+        nn.set_input()
         nn.update(10)
     print(f"training complete in {time()-start:.2f}s")
     nn.set_input(prev_state)
+
+# def test(nn: NN):
+#     prev_state = nn.inputs.copy()
+#     start = time()
+#     print(f"testing 10'000 samples")
+#     X, y = get_test()
+#     for 
+#         nn.set_input()
+#         nn.update(10)
+#     print(f"training complete in {time()-start:.2f}s")
+#     nn.set_input(prev_state)
 
 def save_nn(nn: NN, path: str = "model.pkl"):
     prev_state = nn.inputs.copy()
