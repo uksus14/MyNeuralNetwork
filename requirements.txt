@@ -1,0 +1,5 @@
+pandas
+numpy
+typing
+typing-extensions
+pygame

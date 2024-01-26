@@ -1,7 +1,9 @@
 import numpy as np
 from typing_extensions import Self
 
-alpha = .1
+BIG_NUMBER = 9999999
+
+alpha = .005
 shift = lambda:None
 def set_shift(alpha):
     global shift
@@ -25,6 +27,8 @@ class Layer:
         self.prev.ans()
         z = np.matmul(self.prev.answers[0], self.ks)+self.bs
         exp = np.exp(-z)
+        exp[exp == np.inf] = BIG_NUMBER
+        exp[exp == -np.inf] = -BIG_NUMBER
         return 1/(1+exp), exp
     def ans(self):
         if self.answers is None:
@@ -47,14 +51,17 @@ class ILayer(Layer):
     def set_input(self, input: np.ndarray):
         self.answers[0] = input.reshape((1, self.width))
 class OLayer(Layer):
-    def update(self, answers: np.ndarray):
+    def update(self, answers: np.ndarray) -> float:
         self.ans()
         real_answers = answers.reshape((1, self.width))
         mul = (1-real_answers)/(1-self.answers[0])-real_answers/self.answers[0]
-        return super().update(mul)
+        loss = -np.multiply(real_answers, np.log(self.answers[0])) - np.multiply(1-real_answers, np.log(1-self.answers[0]))
+        super().update(mul)
+        return loss.sum()
 
 class NN:
     def __init__(self, input: int, output: int, hidden: list[int]=[]):
+        print(f"initializing an nn with layers widths of {[input, *hidden, output]}")
         self.i = ILayer(input)
         self.layers = [self.i]
         for width in hidden:
@@ -76,8 +83,9 @@ class NN:
     def update(self, answers: int|np.ndarray):
         if isinstance(answers, int):
             answers = self._get_answers(answers)
-        self.o.update(answers)
+        loss = self.o.update(answers)
         self.clear_answers()
+        return loss
     def _get_answers(self, index: int) -> np.ndarray:
         answers = np.zeros((1, self.o.width))
         answers[0, index] = 1
