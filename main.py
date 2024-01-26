@@ -1,4 +1,4 @@
-from NNnumber_train import get_nn, train, save_nn, load_nn, draw_zero
+from NNnumber_train import get_nn, train, save_nn, load_nn, draw
 
 nn = get_nn(100)
 train_for = 128
@@ -66,7 +66,8 @@ def update():
     screen.blit(text, (ANSWER_OFFSET_X+ANSWER_OFFSET_Y, int(10*ANSWER_OFFSET_Y)-FONT_SIZE//4))
     pg.display.flip()
 
-PG_NUMBERS = [pg.K_KP0, pg.K_KP1, pg.K_KP2, pg.K_KP3, pg.K_KP4, pg.K_KP5, pg.K_KP6, pg.K_KP7, pg.K_KP8, pg.K_KP9, pg.K_BACKSPACE][:len(ANSWERS)]
+PG_KP_NUMBERS = [pg.K_KP0, pg.K_KP1, pg.K_KP2, pg.K_KP3, pg.K_KP4, pg.K_KP5, pg.K_KP6, pg.K_KP7, pg.K_KP8, pg.K_KP9, pg.K_BACKSPACE][:len(ANSWERS)]
+PG_NUMBERS = [pg.K_0, pg.K_1, pg.K_2, pg.K_3, pg.K_4, pg.K_5, pg.K_6, pg.K_7, pg.K_8, pg.K_9, pg.K_BACKSPACE][:len(ANSWERS)]
 
 def to_grid(x: int, y: int):
     gx = x//(CELL_SIZE+GAP)
@@ -108,16 +109,20 @@ while running:
                 train(nn, train_for)
             elif event.key == pg.K_s:
                 save_nn(nn)
-            elif event.key == pg.K_z:
-                draw_zero(nn)
             elif event.key == pg.K_l:
                 nn = load_nn()
             else:
                 try:
-                    pressed_key = PG_NUMBERS.index(event.key)
-                except ValueError:
+                    pressed_key = PG_KP_NUMBERS.index(event.key)
+                    key = pressed_key
                     continue
-                key = pressed_key
+                except ValueError:
+                    pass
+                try:
+                    pressed_key = PG_NUMBERS.index(event.key)
+                    draw(nn, pressed_key)
+                except ValueError:
+                    pass
         elif event.type == pg.KEYUP:
             key = None
         elif event.type == pg.MOUSEBUTTONDOWN:
