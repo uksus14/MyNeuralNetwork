@@ -60,14 +60,26 @@ class OLayer(Layer):
         return loss.sum()
 
 class NN:
-    def __init__(self, input: int, output: int, hidden: list[int]=[]):
+    def __init__(self, input: int|tuple[int, int], output: int, hidden: list[int]=[]):
         print(f"initializing an nn with layers widths of {[input, *hidden, output]}")
+        self.input_shape = input
+        if not isinstance(input, int):
+            input = self.input_shape[0]*self.input_shape[1]
         self.i = ILayer(input)
         self.layers = [self.i]
         for width in hidden:
             self.layers.append(Layer(width, self.layers[-1]))
         self.o = OLayer(output, self.layers[-1])
         self.layers.append(self.o)
+    def _flatten_input_coords(self, x: int, y: int = None) -> int:
+        if y is not None:
+            x = y*self.input_shape[1]+x
+        return x
+    def get_input(self, x: int, y: int = None) -> float|None:
+        index = self._flatten_input_coords(x, y)
+        if 0 <= index < self.i.width:
+            return self.inputs[0, index]
+        return None
     def clear_answers(self):
         self.o.clear()
     def clear_input(self):
@@ -75,7 +87,8 @@ class NN:
     def set_input(self, input: np.ndarray):
         self.i.set_input(input.reshape((1, self.i.width)))
         self.clear_answers()
-    def change_input(self, index: int, value: int):
+    def change_input(self, value: int, x: int, y: int = None):
+        index = self._flatten_input_coords(x, y)
         if self.inputs[0, index] == value:
             return
         self.inputs[0, index] = value

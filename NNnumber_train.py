@@ -16,7 +16,7 @@ tests["label"] = answers
 def get_nn(*hidden: int, shift: float = None) -> NN:
     if shift is not None:
         set_shift(shift)
-    nn = NN(28*28, 10, hidden)
+    nn = NN((28, 28), 10, hidden)
     return nn
 
 def train(nn: NN, n: int = 1024):

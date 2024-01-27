@@ -9,7 +9,7 @@ pg.init()
 
 FPS = 60
 
-SIDEBAR_WIDTH, WINDOW_HEIGHT = 300, 750
+SIDEBAR_WIDTH, WINDOW_HEIGHT = 300, 756
 GAP = 4
 CIRCLE_RADIUS = 25
 GRID_HEIGHT = 28
@@ -18,12 +18,16 @@ FONT_SIZE = 30
 assert nn.i.width == GRID_HEIGHT * GRID_WIDTH
 assert nn.o.width == len(ANSWERS)
 
+DRAWING_NEIGHBORHOOD = (            (0, -1, .4),
+                        (-1, 0, .4), (0, 0, 1),  (1, 0, .4),
+                                    (0, 1, .4))
+
 BACKGROUND = (150, 150, 150)
 EMPTY_CELL = (255, 255, 255)
 FILLED_CELL = (0, 0, 0)
 CIRCLE = (0, 0, 0)
 
-CELL_SIZE = WINDOW_HEIGHT // (GRID_HEIGHT - GAP) - GAP
+CELL_SIZE = WINDOW_HEIGHT // GRID_HEIGHT - GAP
 WINDOW_WIDTH = (CELL_SIZE + GAP) * GRID_WIDTH + SIDEBAR_WIDTH
 ANSWER_OFFSET_Y = WINDOW_HEIGHT // (len(ANSWERS) + 1)
 ANSWER_OFFSET_X = WINDOW_WIDTH - SIDEBAR_WIDTH + ANSWER_OFFSET_Y
@@ -42,12 +46,11 @@ def draw_cell(x: int, y: int, cell: float):
     pg.draw.rect(screen, color, rect)
 
 def draw_grid():
-    grid = nn.inputs
     for y in range(GRID_HEIGHT):
         for x in range(GRID_WIDTH):
-            draw_cell(x, y, grid[0, y*GRID_WIDTH+x])
+            draw_cell(x, y, nn.get_input(x, y))
 
-def draw_answer(answer, i):
+def draw_answer(answer: float, i: int):
     top = ANSWER_OFFSET_Y*(i+1)
     pg.draw.circle(screen, FILLED_CELL, (ANSWER_OFFSET_X, top), answer*CIRCLE_RADIUS)
     text = impact.render(f'{ANSWERS[i]}', False, FILLED_CELL)
@@ -76,24 +79,33 @@ def to_grid(x: int, y: int):
         return gx, gy
     return None
 
+def drawing(x: int, y: int):
+    for dx, dy, add in DRAWING_NEIGHBORHOOD:
+        cell = nn.get_input(x+dx, y+dy)
+        if cell is not None:
+            cell = min(cell + add, 1)
+            nn.change_input(cell, x+dx, y+dy)
+
 def pressing_key(frame: int):
     if key is not None:
         nn.update(key)
 def pressing_mouse(frame: int):
+    if mouse is None:return
+    mouse_coords = pg.mouse.get_pos()
+    cell = to_grid(*mouse_coords)
+    if cell is None:
+        return
+    x, y = cell
     if mouse:
-        cell = to_grid(*pg.mouse.get_pos())
-        if cell is None:
-            return
-        x, y = cell
-        cell = nn.inputs[0, y*GRID_WIDTH+x]+.3
-        if cell > 1: cell = 1
-        nn.change_input(y*GRID_WIDTH+x, cell)
+        drawing(x, y)
+    else:
+        nn.change_input(0, x, y)
 def pressing_update(frame: int):
     pressing_key(frame)
     pressing_mouse(frame)
 
 key = None
-mouse = False
+mouse = None
 running = True
 frame = 0
 while running:
@@ -128,7 +140,7 @@ while running:
         elif event.type == pg.MOUSEBUTTONDOWN:
             mouse = True
         elif event.type == pg.MOUSEBUTTONUP:
-            mouse = False
+            mouse = None
         elif event.type == pg.MOUSEWHEEL:
             if event.y>0:
                 train_for *= 2
