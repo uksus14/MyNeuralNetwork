@@ -1,9 +1,13 @@
 from layers import NN, set_shift
 from datetime import datetime
+from utils import Activation, Initialization
 import pickle
 import pandas as pd
 
-samples = pd.read_csv("./samples/mnist_train.csv")
+try:
+    samples = pd.read_csv("./samples/mnist_train.csv")
+except FileNotFoundError:
+    raise Exception("Download MNist samples from the link in the samples folder")
 answers = samples["label"].copy()
 samples = samples / 255
 samples["label"] = answers
@@ -35,8 +39,9 @@ def train(nn: NN, n: int = 1024):
         done += 1
         if (datetime.now()-last_answer).total_seconds()>30:
             last_answer = datetime.now()
-            print(f"{100*done/n:.1f}% of samples are done")
-    print(f"training complete in {(datetime.now()-start).total_seconds():.2f}s")
+            print(f"{100*done/n:.1f}% of samples are done in {(last_answer-start).total_seconds():.1f}s. Estimated time left is {n*(last_answer-start).total_seconds()/done-(last_answer-start).total_seconds():.1f}s ending at {(start+n*(last_answer-start)/done).time().isoformat("seconds")}")
+    end = datetime.now()
+    print(f"training complete in {(end-start).total_seconds():.2f}s at {end.time().isoformat("seconds")}")
     print(f"cost is {losses/n:.2f}")
     nn.set_input(prev_state)
     return losses/n
