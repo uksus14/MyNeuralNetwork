@@ -1,6 +1,7 @@
 from NNnumber_train import get_nn, train, save_nn, load_nn, draw
+from scheme import scheme
 
-nn = get_nn(100)
+nn = get_nn(scheme)
 train_for = 128
 ANSWERS = list(range(10))
 
@@ -15,7 +16,7 @@ CIRCLE_RADIUS = 25
 GRID_HEIGHT = 28
 GRID_WIDTH = 28
 FONT_SIZE = 30
-assert nn.i.width == GRID_HEIGHT * GRID_WIDTH
+nn.clear_input(GRID_HEIGHT, GRID_WIDTH)
 assert nn.o.width == len(ANSWERS)
 
 DRAWING_NEIGHBORHOOD = (            (0, -1, .4),
@@ -48,7 +49,7 @@ def draw_cell(x: int, y: int, cell: float):
 def draw_grid():
     for y in range(GRID_HEIGHT):
         for x in range(GRID_WIDTH):
-            draw_cell(x, y, nn.get_input(x, y))
+            draw_cell(x, y, nn.inputs[y, x, 0])
 
 def draw_answer(answer: float, i: int):
     top = ANSWER_OFFSET_Y*(i+1)
@@ -81,7 +82,7 @@ def to_grid(x: int, y: int):
 
 def drawing(x: int, y: int):
     for dx, dy, add in DRAWING_NEIGHBORHOOD:
-        cell = nn.get_input(x+dx, y+dy)
+        cell = nn.inputs[y+dy, x+dx]
         if cell is not None:
             cell = min(cell + add, 1)
             nn.change_input(cell, x+dx, y+dy)
@@ -108,6 +109,7 @@ key = None
 mouse = None
 running = True
 frame = 0
+alt = "0"
 while running:
     clock.tick(FPS)
     frame = (frame + 1)%60
@@ -117,27 +119,32 @@ while running:
         elif event.type == pg.KEYDOWN:
             if event.key == pg.K_ESCAPE:
                 running = False
+            if event.key in [pg.K_LALT, pg.K_RALT]:
+                alt = "0"
             if event.key == pg.K_SPACE:
-                nn.clear_input()
-            elif event.key == pg.K_t:
+                nn.clear_input(GRID_HEIGHT, GRID_WIDTH)
+            if event.key == pg.K_t:
                 train(nn, train_for)
-            elif event.key == pg.K_s:
+            if event.key == pg.K_s:
                 save_nn(nn)
-            elif event.key == pg.K_l:
+            if event.key == pg.K_l:
                 nn = load_nn()
-            else:
-                try:
-                    pressed_key = PG_KP_NUMBERS.index(event.key)
+            if event.key in PG_KP_NUMBERS:
+                pressed_key = PG_KP_NUMBERS.index(event.key)
+                if alt:
+                    alt += str(pressed_key)
+                else:
                     key = pressed_key
-                    continue
-                except ValueError:
-                    pass
-                try:
-                    pressed_key = PG_NUMBERS.index(event.key)
+            if event.key in PG_NUMBERS:
+                pressed_key = PG_NUMBERS.index(event.key)
+                if alt:
+                    alt += str(pressed_key)
+                else:
                     draw(nn, pressed_key)
-                except ValueError:
-                    pass
         elif event.type == pg.KEYUP:
+            if event.key in [pg.K_LALT, pg.K_RALT]:
+                train_for = int(alt) or 1
+                alt = ""
             key = None
         elif event.type == pg.MOUSEBUTTONDOWN:
             mouse = True

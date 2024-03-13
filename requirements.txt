@@ -3,3 +3,4 @@ numpy
 typing
 typing-extensions
 pygame
+scipy

@@ -1,27 +1,13 @@
-from layers import NN, set_shift
+from nn import NN
+from data_nn import NNScheme
+from number_train import get_data
 from datetime import datetime
-from utils import Activation, Initialization
 import pickle
-import pandas as pd
 
-try:
-    samples = pd.read_csv("./samples/mnist_train.csv")
-except FileNotFoundError:
-    raise Exception("Download MNist samples from the link in the samples folder")
-answers = samples["label"].copy()
-samples = samples / 255
-samples["label"] = answers
+samples, tests = get_data()
 
-tests = pd.read_csv("./samples/mnist_test.csv")
-answers = tests["label"].copy()
-tests = tests / 255
-tests["label"] = answers
-
-def get_nn(*hidden: int, shift: float = None) -> NN:
-    if shift is not None:
-        set_shift(shift)
-    nn = NN((28, 28), 10, hidden)
-    return nn
+def get_nn(scheme: NNScheme) -> NN:
+    return scheme.create()
 
 def train(nn: NN, n: int = 1024):
     prev_state = nn.inputs.copy()
@@ -32,10 +18,11 @@ def train(nn: NN, n: int = 1024):
     done = 0
     losses = 0
     for _, data in portion.iterrows():
-        answer = data.pop("label")
+        answer = int(data.pop("label"))
         input = data.to_numpy().reshape((28, 28))
         nn.set_input(input)
-        losses += nn.update(int(answer))
+        losses += nn.loss(answer)
+        nn.update(answer)
         done += 1
         if (datetime.now()-last_answer).total_seconds()>30:
             last_answer = datetime.now()
@@ -53,7 +40,7 @@ def draw(nn: NN, answer: int):
 
 def save_nn(nn: NN, path: str = "model.pkl"):
     prev_state = nn.inputs.copy()
-    nn.clear_input()
+    nn.clear_input(28, 28)
     with open(path, "wb") as f:
         pickle.dump(nn, f)
     nn.set_input(prev_state)
