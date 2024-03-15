@@ -61,7 +61,7 @@ class OLayer(Layer):
 
 class NN:
     def __init__(self, input: int|tuple[int, int], output: int, hidden: list[int]=[], initialization: Initialization = Initialization.He, activation: Activation = Activation.ReLU):
-        print(f"initializing an nn with layers widths of {', '.join([input, *hidden, output])}")
+        print(f"initializing an nn with layers widths of {', '.join(map(str, [input, *hidden, output]))}")
         self.input_shape = input
         if not isinstance(input, int):
             input = self.input_shape[0]*self.input_shape[1]
