@@ -55,8 +55,11 @@ class OLayer(Layer):
         self.ans()
         real_answers = answers.reshape((1, self.width))
         mul = (1-real_answers)/(1-self.answers)-real_answers/self.answers
-        loss = -np.multiply(real_answers, np.log(self.answers)) - np.multiply(1-real_answers, np.log(1-self.answers))
         super().update(mul)
+    def loss(self, answers: np.ndarray) -> float:
+        self.ans()
+        real_answers = answers.reshape((1, self.width))
+        loss = -np.multiply(real_answers, np.log(self.answers)) - np.multiply(1-real_answers, np.log(1-self.answers))
         return loss.sum()
 
 class NN:
@@ -94,14 +97,17 @@ class NN:
         self.inputs[0, index] = value
         self.clear_answers()
     def update(self, answers: int|np.ndarray):
-        if isinstance(answers, int):
-            answers = self._get_answers(answers)
-        loss = self.o.update(answers)
+        answers = self._get_answers(answers)
+        self.o.update(answers)
         self.clear_answers()
-        return loss
-    def _get_answers(self, index: int) -> np.ndarray:
-        answers = np.zeros((1, self.o.width))
-        answers[0, index] = 1
+    def loss(self, answers: int|np.ndarray):
+        answers = self._get_answers(answers)
+        return self.o.loss(answers)
+    def _get_answers(self, answers: int|np.ndarray) -> np.ndarray:
+        if isinstance(answers, int):
+            new_answers = np.zeros((1, self.o.width))
+            new_answers[0, answers] = 1
+            answers = new_answers
         return answers
     def answers(self) -> np.ndarray:
         self.o.ans()
