@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from math import sqrt
 from typing import Self
-from grid_utils import c_data
+from common import c_data
 
 move_time = timedelta(milliseconds=200)
 appear_time = timedelta(seconds=1)
@@ -58,6 +58,6 @@ class MessageList:
     def get(self) -> list[Message]:
         return self.messages
     
-def draw_messages(common: c_data, messages: MessageList):
+def update_messages(common: c_data, messages: MessageList):
     for message in messages.get():
         pass
