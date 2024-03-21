@@ -1,5 +1,6 @@
+numba==0.59.1
+numpy==1.26.4
 pandas
-numpy
 typing
 typing-extensions
 pygame

@@ -2,11 +2,6 @@ from data_network_part import ConvScheme, FCScheme
 from data_layers import OCLayerScheme
 import numpy as np
 
-class inbounds(np.ndarray):
-    def __getitem__(self, __name: np.Any) -> np.Any:
-        # activates when item is requested, for example: nn.inputs[0, 0]
-        return super().__getitem__(__name)
-
 class NN:
     def __init__(self, neural: FCScheme, conv: ConvScheme = None):
         self.neural = neural.create()
